@@ -13,10 +13,13 @@ import json
 #import nltk
 #nltk.download('stopwords')
 #from unidecode import unidecode
+import soundex
+from difflib import SequenceMatcher
+import distance
+
 
 
 class TextProcessor():
-    
     def intializeLogger(self,logFilePath):
         import logging    
         # set up logging to file - see previous section for more details
@@ -48,12 +51,12 @@ class TextProcessor():
                 break
         new_lines = lines[start:]
         return new_lines
-
+    
     def tokenize_sentence(self,line):
         words = line[0:len(line)-1].strip().split("\n")    
         words = self.preprocess(words) 
         return words
-
+    
 
     def preprocess(self,words):       
         #punctuations = (string.punctuation).replace("'", "") 
@@ -63,52 +66,53 @@ class TextProcessor():
         #words = [str for str in stripped_words if str]
         p_words = []
         for word in words:
-		if len(word)>0:
-			if (word[0] and word[len(word)-1] == "'"):
-                		word = word[1:len(word)-1]
-	            	elif(word[0] == "'"):
-                		word = word[1:len(word)]
-            		else:
-                		word = word
-            		p_words.append(word)
-	words = p_words
+            if len(word)>0:
+                if (word[0] and word[len(word)-1] == "'"):
+                    word = word[1:len(word)-1]
+                elif(word[0] == "'"):
+                    word = word[1:len(word)]
+                else:
+                    word = word
+                    p_words.append(word)
+        words = p_words
         words = [word for word in words if not len(word) == 1]
         words = [str for str in words if str]
         words = [word.lower() for word in words]
         words = [str.replace("\r","") for str in words if str]
         words = [str.replace("\\u","") for str in words if str]
 
-	words = [str.replace("“","") for str in words if str]
-	words = [str.replace("�","") for str in words if str]
-	words = [str.replace("‘","") for str in words if str]
-	words = [str.replace("i�","") for str in words if str]
-	words = [str.replace("°","") for str in words if str]
-	words = [str.replace("«ss","") for str in words if str]
-	words = [str.replace("^","") for str in words if str]	
-	words = [str.replace("�","") for str in words if str]	
-	words = [str.replace("�o","") for str in words if str]
-	words = [str.replace("�","") for str in words if str]
-	words = [str.replace("�","") for str in words if str]
-	words = [str.replace("~","") for str in words if str]
-	words = [str.replace("�","") for str in words if str]
+        words = [str.replace("â€œ","") for str in words if str]
+        words = [str.replace("â€","") for str in words if str]
+        words = [str.replace("â€˜","") for str in words if str]
+        words = [str.replace("iâ€","") for str in words if str]
+        words = [str.replace("Â°","") for str in words if str]
+        words = [str.replace("Â«ss","") for str in words if str]
+        words = [str.replace("^","") for str in words if str]
+        words = [str.replace("Â","") for str in words if str]
+        words = [str.replace("«o","") for str in words if str]
+        words = [str.replace("©","") for str in words if str]
+        words = [str.replace("¢","") for str in words if str]
+        words = [str.replace("~","") for str in words if str]
+        words = [str.replace("˜","") for str in words if str]
+        words = [str.replace("‘","") for str in words if str]
+        words = [str.replace("»","") for str in words if str]
+        
+        
+        words = [str.replace("|","") for str in words if str]
+        words = [str.replace(":","") for str in words if str]
+        
+        
+        #words = [unidecode(unicode(singleWord , encoding = "utf-8")) for singleWord in words ]
 
+        #words = [singleWord.decode('utf-8').strip() for singleWord in words ]
+        #words = [singleWord.encode('ascii',errors='ignore') for singleWord in words if 1==1]
+        #words = [str.decode("utf-8") for singleWord in words if 1==1]
+        #words = [str.decode("utf-8") for singleWord in words if 1==1]
 
-
-
-	words = [str.replace("|","") for str in words if str]
-	words = [str.replace(":","") for str in words if str]
-	#words = [unidecode(unicode(singleWord , encoding = "utf-8")) for singleWord in words ]
-
-	#words = [singleWord.decode('utf-8').strip() for singleWord in words ]
-	#words = [singleWord.encode('ascii',errors='ignore') for singleWord in words if 1==1]
-	#words = [str.decode("utf-8") for singleWord in words if 1==1]
-	#words = [str.decode("utf-8") for singleWord in words if 1==1]
-
-	words = [word for word in words if len(word) > 2]
-	
-    
+        words = [word for word in words if len(word) > 2]
         return words
-    
+        
+            
     def word2vec(self,word):
         from collections import Counter
         from math import sqrt
@@ -125,13 +129,14 @@ class TextProcessor():
     
         # return a tuple
         return cw, sw, lw
-
+    
+    
     def cosdis(self,v1, v2):
         # which characters are common to the two words?
         common = v1[1].intersection(v2[1])
         # by definition of cosine distance we have
         return sum(v1[0][ch]*v2[0][ch] for ch in common)/v1[2]/v2[2]
-    
+
     
     def readData(self,logging,pathFile):
         import pandas as pd
@@ -139,6 +144,7 @@ class TextProcessor():
         raw_text=pd.read_csv(pathFile);
         return raw_text;
     
+
     def preProcessData(self,logging,raw_text):       
         config='';
         formated_list=[];
@@ -149,17 +155,17 @@ class TextProcessor():
         for index, row in raw_text.iterrows():
             words=[]
             words1=[]
-	    side=''
+            side=''
             
             if (str(row['Text']).strip() != "" and str(row['Text'])!='nan'):
-            	words=self.remove_metadata(row['Text'])
-	        words=self.tokenize_sentence(words)
-            	#logging.info('formated text : ',words)
+                words=self.remove_metadata(row['Text'])
+                words=self.tokenize_sentence(words)
+                #logging.info('formated text : ',words)
                 
             if (str(row['SN_L-SD_R']).strip() != "" and str(row['SN_L-SD_R'])!='nan'):   
-            	words1=self.remove_metadata(row['SN_L-SD_R'])
-            	words1=self.tokenize_sentence(words1)
-            	#logging.info('SN_L-SD_R text',words1)    
+                words1=self.remove_metadata(row['SN_L-SD_R'])
+                words1=self.tokenize_sentence(words1)
+                #logging.info('SN_L-SD_R text',words1)    
         
             if len(words) !=0 :
                 words=words1+words
@@ -181,9 +187,9 @@ class TextProcessor():
             
             dataFrame_formated=dataFrame_formated.append(temp_df)
             #formated_list.append(words)
-        return dataFrame_formated
-        
-        
+        return dataFrame_formated    
+    
+    
     def selective_words_fuc(self,logging,config):
         #print ('printed config',config)
         selective_temp_words=[]
@@ -196,35 +202,35 @@ class TextProcessor():
         selective_words = [x for sublist in selective_temp_words for x in sublist]
         #logging.info(selective_words)
         return selective_words
-    
+
     def retrive_threshold(self,logging,field_Name,config):
         for fields_details in config['fields_details']:
             if (fields_details['field_Name'] == field_Name):
                 return float (fields_details['primary_config']['simliarity_threshold'])
-    
-    
+
+            
     def getMethodDetails(self,logging,field_Name,config):
         for fields_details in config['fields_details']:
             if (fields_details['field_Name'] == field_Name):
                 return fields_details['Call_method']
-    
+            
+
     def getFieldsDetails(self,field_name,config):
         for i in range(0,int(len(field_name))-1):
             differnet_fields=config['fields_details']
             if(differnet_fields[i]['field_Name'] == field_name):
                 return (differnet_fields[i])
-    
+
     def getPrimaryORSecondary(self,field_Name,config):
         for fields_details in config['fields_details']:
             if (fields_details['field_Name'] == field_Name):
                 return fields_details['primary_config']['isPrimary']
-    
+            
     def getSencondaryDetails(self,field_Name,config):
         for fields_details in config['fields_details']:
             if (fields_details['field_Name'] == field_Name):
                 return fields_details['secondary_config']
-        
-    
+            
     def filterOutRecords(self,logging,dataFrame_formated):
         final_list=[]
         count_threshold=4
@@ -234,17 +240,12 @@ class TextProcessor():
         
         for index, each_line in dataFrame_formated.iterrows():
             str_config=str(each_line['config'])
-            #logging.info('str_config',str_config)
-	    #print ('str_config',str_config)
             if str_config == 'Left':
                 config=left_config
             elif str_config == 'Right':
                 config=right_config
-	    else:
-		config=left_config    
-            #print ('config: ',config)    
-	    #print ('left config',left_config)
-	    #print ('right config',right_config)
+            else:
+                config=left_config    
             selective_words_v=self.selective_words_fuc(logging,config)
             
             count_key_words=0
@@ -284,9 +285,46 @@ class TextProcessor():
                         refined_formated=refined_formated.append(temp_df)
                     
                         #logging.info("----------------------------------------------------------------------------------")
-                #else:
-                #    logging.info('Not present !!!') 
+                    #else:
+                            #logging.info('Not present !!!') 
         return refined_formated;
+
+    
+    def evaluateField(self,logging,orgText,findText,threshold):
+        #print ('orgText : ',orgText,' findText :',findText,' threshold: ',threshold)
+        inVar=False
+        soundVar=False
+        cosDis=False
+        similarVar=False
+        distVar=False
+    
+        inVar=orgText in findText
+        s=soundex.getInstance()
+        soundVar=s.soundex(orgText) == s.soundex(findText) 
+        #logging.info ('inVar ',inVar)
+        #logging.info ('soundVar ',soundVar)
+        if (inVar==True or soundVar==True):
+            return orgText
+        else:
+            w1=self.word2vec(str(orgText))
+            w2=self.word2vec(str(findText))
+        
+            #logging.info ('cosdis :',self.cosdis(w1,w2))
+            if self.cosdis(w1,w2) > float(threshold):
+                cosDis=True
+        
+            #logging.info ('seq match :',SequenceMatcher(a=orgText,b=findText).ratio())
+            if SequenceMatcher(a=orgText,b=findText).ratio()>float(threshold):
+                similarVar=True
+        
+            #print ('levenshtein:',distance.levenshtein(orgText,findText))
+            if distance.levenshtein(orgText,findText)<=8:
+                distVar=True
+        
+            if (cosDis==True and similarVar==True and distVar==True):
+                return orgText
+            else:
+                return ""
     
     def retriveFieldName(self,logging,single_word,selectedWord,config):
         #logging.info('-------------------------------------------------------------')
@@ -294,26 +332,16 @@ class TextProcessor():
     
         if(string_ops):
             return selectedWord
-        else:
-            va = self.word2vec(str(single_word))
-            vb = self.word2vec(str(selectedWord))
-            cosine_similarity=self.cosdis(va,vb)
-            #logging.info('cosine_similarity : ',cosine_similarity)
+        else:            
             sim_threshold=self.retrive_threshold(logging,selectedWord,config)
-            #logging.info('Threshold: ',sim_threshold)
             if (sim_threshold == None):
                    sim_threshold=.99 
-            if (cosine_similarity >= float(sim_threshold) ):
-                   return selectedWord
-            else:
-                   return ""
-            #logging.info('-------------------------------------------------------------')
+            return self.evaluateField(logging,selectedWord,single_word,sim_threshold);        
 
-            
-    
     def callFactoryMethod(self,logging,field_name,single_word,single_line_cpy,detail_dict,config):
         #logging.info('callFactoryMethod:')
         method_Name=self.getMethodDetails(logging,field_name,config)
+        #print ('method Name :',method_Name)
         if (method_Name == 'blankInBetween'):
             #logging.info('++++++++++++++++++++++++++++++++++++++++++++++++')
             #logging.info('Sending -',field_name,single_word)
@@ -327,9 +355,12 @@ class TextProcessor():
         elif (method_Name=='checkIfAvailable'):
             result_text,sec_postion=self.checkIfAvailable(logging,field_name,single_word,single_line_cpy,detail_dict,config)
             return result_text,sec_postion;
+        elif (method_Name=='getfullRecordInbetween'):
+            result_text,sec_postion=self.getfullRecordInbetween(logging,field_name,single_word,single_line_cpy,detail_dict,config)
+            return result_text,sec_postion;
         else :
-            return "Didnt match";  
-    
+            return "Didnt match";
+
     def checkIfAvailable(self,logging,field_Name,single_word,single_line_cpy,detail_dict,config):
         #logging.info('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         #logging.info('field_Name : ',field_Name)
@@ -342,7 +373,6 @@ class TextProcessor():
             return single_word,None;
         else:
             #logging.info('This is secondary !!')
-            #logging.info('')
             #if we have before or after need to check if that field is gathered corretly
             secodary_dict=self.getSencondaryDetails(field_Name,config)
             dependency_field_Name=secodary_dict['dependency_field_Name']
@@ -363,43 +393,89 @@ class TextProcessor():
                         if secodary_dict['access_type']=='before':
                             #logging.info('before method')
                             if field_postion-int(how_many_section) >= 0:
-                                #logging.info('OK cnd',field_postion-int(how_many_section) >= 0)
-                                #logging.info('field_Name : ',field_Name)
-                                #logging.info('single_line_cpy[field_postion-int(how_many_section)] : ',single_line_cpy[field_postion-int(how_many_section)])
-                            
-                                w1=self.word2vec(field_Name)
-                                w2=self.word2vec(single_line_cpy[field_postion-int(how_many_section)])
-                                #logging.info('w1',w1)
-                                #logging.info('w2',w2)
-                                #logging.info('float(retrive_threshold(field_Name,config))',float(self.retrive_threshold(logging,field_Name,config)))
-                                #logging.info('cosdis(w1,w2)',self.cosdis(w1,w2))
-                                if (self.cosdis(w1,w2) > float(self.retrive_threshold(logging,field_Name,config)) ):
-                                    #logging.info('cosdis(w1,w2) > float(retrive_threshold(field_Name,config))',self.cosdis(w1,w2) > float(self.retrive_threshold(logging,field_Name,config)))
-                                    #logging.info('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+                                inVar=False;
+                                soundVar=False;
+                                lineVar=False;
+                                inVar=field_Name in single_line_cpy[field_postion-int(how_many_section)]
+                                s=soundex.getInstance()
+                                soundVar=s.soundex(field_Name) == s.soundex(single_line_cpy[field_postion-int(how_many_section)]) 
+                                                                
+                                if (inVar==True or soundVar==True):
                                     return field_Name,field_postion-int(how_many_section)
                                 else:
-                                    return None,None
+                                    for single_rec_Num in range(0,len(single_line_cpy)):
+                                        lineVar=field_Name in single_line_cpy[single_rec_Num]
+                                        if (lineVar==True):
+                                            return field_Name,single_rec_Num
+                                        else:
+                                            return None,None
                             else:
                                 return None,None
                         
                         elif secodary_dict['access_type']=='after':
                             if field_postion-int(how_many_section) >= 0:
-                                w1=self.word2vec(field_Name)
-                                w2=self.word2vec(single_line_cpy[field_postion+int(how_many_section)])
-                                if (self.cosdis(w1,w2) > float(self.retrive_threshold(logging,field_Name,config)) ):
+                                inVar=False;
+                                soundVar=False;                                
+                                inVar=field_Name in single_line_cpy[field_postion+int(how_many_section)]
+                                s=soundex.getInstance()
+                                soundVar=s.soundex(field_Name) == s.soundex(single_line_cpy[field_postion+int(how_many_section)]) 
+                                if (inVar==True or soundVar==True):
                                     return field_Name,field_postion+int(how_many_section)
                                 else:
-                                    return None,None
+                                    for single_rec_Num in range(0,len(single_line_cpy)):
+                                        lineVar=field_Name in single_line_cpy[single_rec_Num]
+                                        if (lineVar==True):
+                                            return field_Name,single_rec_Num
+                                        else:
+                                            return None,None
                             else:
                                 return None,None
                     else:
                         return None,None
         return None,None
+
+    
+    def getfullRecordInbetween(self,logging,field_Name,single_word,single_line_cpy,detail_dict,config):
+        secodary_dict=self.getSencondaryDetails(field_Name,config)
+        field_one=secodary_dict['FieldOne']
+        field_two=secodary_dict['Fieldtwo']
+        total_sec=secodary_dict['how_many_section']
+        field_one_postion=''
+        field_two_postion=''
+        #logging.info ('field_one :',field_one)
+        #logging.info ('field_two :',field_two)
+        #logging.info ('total_sec ',total_sec)
+        for details_ind in detail_dict:
+            #logging.info ('details_ind[field_Name]',details_ind['field_Name'])
+            #logging.info ('field_one:',field_one)
+            #logging.info (details_ind['field_Name']==field_one)
+            if (field_one_postion=='' and details_ind['field_Name']==field_one):
+                field_one_postion=details_ind['postion_extracted']
+            
+            if (field_two_postion=='' and details_ind['field_Name']==field_two):
+                field_two_postion=details_ind['postion_extracted']
+        
+        #logging.info ('field_one_postion : ',field_one_postion)
+        #logging.info ('field_two_postion : ',field_two_postion)
+        
+        if (field_one_postion!='' and field_two_postion!=''):
+            # check if we have the record in the 
+    
+            if((int(field_two_postion)-int(field_one_postion))-1 > 0):
+                ## Currently gets only one postion details
+                postion=int(field_two_postion)-1;
+                data_retrived=single_line_cpy[int(field_two_postion)-1];
+                #logging.info ('postion :',postion,' data_retrived:',data_retrived);
+                return data_retrived,postion;    
+            else:
+                return None,None
+        else:
+            return None,None
+            
     
     def getFullrecord(self,logging,field_Name,single_word,single_line_cpy,detail_dict,config):
         if (self.getPrimaryORSecondary(field_Name,config) == 'Y'):
-            #logging.info('This is primary !!')
-        
+            #logging.info('This is primary !!')        
             #if primary return the word just like that
             return single_word,None;
         else:
@@ -420,25 +496,25 @@ class TextProcessor():
                         if secodary_dict['access_type']=='before':
                             #logging.info('inside getFullrecord 3:',detail_dict)
                             if field_postion-int(how_many_section) >= 0:
-				try:
-				  return single_line_cpy[field_postion-int(how_many_section)],field_postion-int(how_many_section)
-				except:
-				  return None,None
+                                try:
+                                    return single_line_cpy[field_postion-int(how_many_section)],field_postion-int(how_many_section)
+                                except:
+                                    return None,None
                             else:
                                 return None,None
                         elif secodary_dict['access_type']=='after':
                             #logging.info('inside getFullrecord 3:',detail_dict)
                             if field_postion+int(how_many_section) >= 0:
-				try:
-				   return single_line_cpy[field_postion+int(how_many_section)],field_postion+int(how_many_section)
-				except:
-				   return None,None
+                                try:
+                                    return single_line_cpy[field_postion+int(how_many_section)],field_postion+int(how_many_section)
+                                except:
+                                    return None,None
                             else:
                                 return None,None
                     else:
                         return None,None
         return None,None
-    
+
     def blankInBetween(self,logging,field_Name,single_word):
         #logging.info (field_Name,'-',single_word)
         field_Name_list=field_Name.split()
@@ -470,8 +546,13 @@ class TextProcessor():
             if (single_word_lenght>field_Name_lenght):
                 return str(single_word[field_Name_lenght:single_word_lenght]).strip()
             else:
-                return ""
-    
+                split_words_list=single_word.split();
+                if (len(split_words_list) == 2):
+                    return split_words_list[1];
+                else:
+                    return ""
+                
+   
     def refreshSelective_words(self,selective_words_v):
         field_dict={}
         for selectedWord in selective_words_v:
@@ -486,7 +567,6 @@ class TextProcessor():
         }
         return detailed_dif;
 
-
     def extracInformation(self,logging,refined_formated):
         final_dict={}
         extracted_data=[]
@@ -500,8 +580,8 @@ class TextProcessor():
                 config=left_config
             elif str_config == 'Right':
                 config=right_config
-	    else:
-		config=left_config   
+            else:
+                config=left_config   
             selective_words_v=self.selective_words_fuc(logging,config)
             single_line=row['formated_word']
 
@@ -511,9 +591,9 @@ class TextProcessor():
             solution_dict['image_name']=row['Image_name']
             solution_dict['time']=row['Image_name'][0:19]
             
-            #logging.info ('----------------------------------------------------------------------')
-            #logging.info ('Current line that is processed',single_line)
-            #logging.info ('----------------------------------------------------------------------')
+            #print ('----------------------------------------------------------------------')
+            #print ('Current line that is processed',single_line)
+            #print ('----------------------------------------------------------------------')
             
             details_dict=[]
             individual_field={}
@@ -521,28 +601,32 @@ class TextProcessor():
             for single_word in single_line:        
                 for selectedWord in selective_words_v:
                     if field_dict[selectedWord] == 'N':
-                        #logging.info ('========================================')
-                        #logging.info ('field_dict : ',field_dict)
-                        #logging.info ('single words processed :',single_word)
-                        #logging.info ('selectedWord :',selectedWord)
-                        #logging.info ('========================================')
+                        #print('========================================')
+                        #print('field_dict : ',field_dict)
+                        #print('single words processed :',single_word)
+                        #print('selectedWord :',selectedWord)
+                        #print('========================================')
                         #if primary
                         if self.getPrimaryORSecondary(selectedWord,config) == 'Y':
 
-                            #logging.info ('Check if ',selectedWord,' word is present in the ',single_word)
+                            #print('Check if ',selectedWord,' word is present in the ',single_word)
                             field_name=self.retriveFieldName(logging,single_word,selectedWord,config)
+                            #print ('feild_name retrived : ',field_name)
 
                             if (field_name!=""):
-                                #logging.info (field_name," its primary")
+                                #print(field_name," its primary")
                                 individual_field=self.createDetailedDif(field_name)
                                 fetched_value =self.callFactoryMethod(logging,field_name,single_word,single_line,details_dict,config)
                                 #details_dict[field_name]=fetched_value
-                                #logging.info ('fetched_value : ',fetched_value)
+                                #print('fetched_value : ',fetched_value)
                                 individual_field['extracted_text']=fetched_value
                                 individual_field['postion_extracted']=single_line.index(single_word)
                                 field_dict[selectedWord] = 'Y'
                                 details_dict.append(individual_field)
                                 break;
+                            else:
+                                continue;
+                                
             for selectedWord in selective_words_v:
                 if field_dict[selectedWord] == 'N':
                     #logging.info ('========================================')
@@ -584,37 +668,10 @@ class TextProcessor():
         print ('Class is built')
 
 
-'''
-import sys
-import warnings
-warnings.simplefilter("ignore")
-
-## Creating object for the Class TextProcessor
-textP=TextProcessor()
-
-## Creating the logger files 
-logging=textP.intializeLogger('/home/ubuntu/TextProcessing/log/TextProcessing.log');
-logging.info('All set now !!!');
-logging.info('reading the data ');
-
-## Reading the in directory files
-raw_text=textP.readData(logging,'/home/ubuntu/TextProcessing/in/Combined.csv');
-dataFrame_formated=textP.preProcessData(logging,raw_text)
-
-filtered_formated=textP.filterOutRecords(logging,dataFrame_formated)
-result_json=textP.extracInformation(logging,filtered_formated)
-
-## writing the data to the output dir
-os.chdir('/home/ubuntu/TextProcessing/outfile/')
-with open('extracted.json', 'w') as outfile:
-    json.dump(result_json, outfile,ensure_ascii=False)
-
-'''
-
 
 ##### Configration for CNBC channel
 
-os.chdir('/home/ubuntu/TextProcessing/config/')
+os.chdir('/home/ubuntu/TextProcessing/config')
 left = open("left_config.txt", "r")
 left_config = eval(left.read())
 
@@ -629,7 +686,6 @@ warnings.simplefilter("ignore")
 from datetime import datetime
 import shutil, os, glob
 
-
 ## Creating object for the object 
 textP=TextProcessor()
 
@@ -638,42 +694,43 @@ logging=textP.intializeLogger('/home/ubuntu/TextProcessing/log/TextProcessing.lo
 logging.info('All set now !!!');
 logging.info('reading the data ');
 
-#srcDir='/home/ubuntu/TextProcessing/in/'
-#dstDir='/home/ubuntu/TextProcessing/data/CNBC/processed/inFile/'
 
-srcDir='/home/ubuntu/TextProcessing/tempTest/'
-dstDir='/home/ubuntu/TextProcessing/testDst/'
+
+srcDir='/home/ubuntu/TextProcessing/in/'
+dstDir='/home/ubuntu/TextProcessing/data/CNBC/processed/inFile/'
 
 
 while os.listdir(srcDir):
     all_files = glob.glob(srcDir + "/*.csv")
     
     for file in all_files:
-        os.chdir('/home/ubuntu/TextProcessing/in')
+        os.chdir('/home/ubuntu/TextProcessing/in/')
         ## Reading the in directory files
-	print ('currently processing file :',file )
-        raw_text=textP.readData(logging,file);
-        dataFrame_formated=textP.preProcessData(logging,raw_text)
+        print ('currently processing file :',file )
+        try:
+            raw_text=textP.readData(logging,file);
+            dataFrame_formated=textP.preProcessData(logging,raw_text)
 
-        ## Filter out only valid data
-        filtered_formated=textP.filterOutRecords(logging,dataFrame_formated)
+            ## Filter out only valid data
+            filtered_formated=textP.filterOutRecords(logging,dataFrame_formated)
 
-        ## Extract information only from valid data
-        result_json=textP.extracInformation(logging,filtered_formated)
+            ## Extract information only from valid data
+            result_json=textP.extracInformation(logging,filtered_formated)
         
-        now = datetime.now()
-        current_time = now.strftime("%d_%m_%Y_%H_%M_%S")
-        file_name='CNBC_'+current_time+'_'+str(now.microsecond)+'.json'
-        print ('file_name:',file_name)
+            now = datetime.now()
+            current_time = now.strftime("%d_%m_%Y_%H_%M_%S")
+            file_name='CNBC_'+current_time+'_'+str(now.microsecond)+'.json'
+            print ('file_name:',file_name)
         
-        ## writing the data to the output dir
-        os.chdir('/home/ubuntu/TextProcessing/outfile')
-        with open(file_name, 'w') as outfile:
-            json.dump(result_json,outfile,ensure_ascii=False)
-	        
+            ## writing the data to the output dir
+            os.chdir('/home/ubuntu/TextProcessing/outfile/')
+            with open(file_name, 'w') as outfile:
+                json.dump(result_json,outfile,ensure_ascii=False)      
+        except:
+            print ('Error while processing !!')
         shutil.move(file, dstDir);
-	print ('file moved :',file)
-	print ('------------------------------------------------------')
+        print ('file moved :',file)
+        print ('------------------------------------------------------')
 
 print ('-------------------  Completed and exiting the TextP -----------------------------------')
 

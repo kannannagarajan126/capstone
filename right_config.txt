@@ -84,6 +84,24 @@
  				"how_many_section": "1"
  			}
  		},
+		{
+ 			"field_Name": "buyPrefix",
+  			"Call_method": "getfullRecordInbetween",           
+ 			"primary_config": {
+ 				"isPrimary": "N",
+ 				"raw_field": "",
+ 				"as_text": "N",
+ 				"confirmation_field": "N",
+ 				"data_along": "N",
+                "simliarity_threshold":.40
+ 			},
+ 			"secondary_config": {
+ 				"FieldOne": "buy",
+ 				"Fieldtwo": "stock_Name",
+ 				"how_many_section": "1"
+ 			}
+ 		},
+		
  		{
  			"field_Name": "sell",
   			"Call_method": "checkIfAvailable",           
@@ -101,6 +119,25 @@
  				"how_many_section": "1"
  			}
  		},
+		
+		{
+ 			"field_Name": "sellPrefix",
+  			"Call_method": "getfullRecordInbetween",           
+ 			"primary_config": {
+ 				"isPrimary": "N",
+ 				"raw_field": "",
+ 				"as_text": "N",
+ 				"confirmation_field": "N",
+ 				"data_along": "N",
+                "simliarity_threshold":.40
+ 			},
+ 			"secondary_config": {
+ 				"FieldOne": "sell",
+ 				"Fieldtwo": "stock_Name",
+ 				"how_many_section": "1"
+ 			}
+ 		},
+		
  		{
  			"field_Name": "broker_Name",
  			"Call_method": "getFullrecord",
