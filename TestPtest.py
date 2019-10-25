@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+
 import os
 from os import listdir
 from os.path import isfile, join
@@ -15,6 +16,7 @@ import json
 import soundex
 from difflib import SequenceMatcher
 import distance
+
 
 class TextProcessor():
     def intializeLogger(self,logFilePath):
@@ -334,28 +336,6 @@ class TextProcessor():
             if (sim_threshold == None):
                    sim_threshold=.99 
             return self.evaluateField(logging,selectedWord,single_word,sim_threshold);
-
-        
-    def retriveFieldName1(self,logging,single_word,selectedWord,config):
-        #logging.info('-------------------------------------------------------------')
-        string_ops=single_word.find(selectedWord)>=0
-    
-        if(string_ops):
-            return selectedWord
-        else:
-            va = self.word2vec(str(single_word))
-            vb = self.word2vec(str(selectedWord))
-            cosine_similarity=self.cosdis(va,vb)
-            #logging.info('cosine_similarity : ',cosine_similarity)
-            sim_threshold=self.retrive_threshold(logging,selectedWord,config)
-            #logging.info('Threshold: ',sim_threshold)
-            if (sim_threshold == None):
-                   sim_threshold=.99 
-            if (cosine_similarity >= float(sim_threshold) ):
-                   return selectedWord
-            else:
-                   return ""
-            #logging.info('-------------------------------------------------------------')
         
 
     def callFactoryMethod(self,logging,field_name,single_word,single_line_cpy,detail_dict,config):
@@ -688,15 +668,20 @@ class TextProcessor():
         print ('Class is built')
 
 
+# In[152]:
+
 
 ##### Configration for CNBC channel
 
-os.chdir('/home/ubuntu/TextProcessing/config/')
+os.chdir('C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/config')
 left = open("left_config.txt", "r")
 left_config = eval(left.read())
 
 right = open("right_config.txt", "r")
 right_config=eval(right.read())
+
+
+# In[153]:
 
 
 import sys
@@ -710,19 +695,23 @@ import shutil, os, glob
 textP=TextProcessor()
 
 ## Creating the logger files 
-logging=textP.intializeLogger('/home/ubuntu/TextProcessing/log/TextProcessing.log');
+logging=textP.intializeLogger('C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/log/TextProcessing.log');
 logging.info('All set now !!!');
 logging.info('reading the data ');
 
 
-srcDir='/home/ubuntu/TextProcessing/tempTest/'
-dstDir='/home/ubuntu/TextProcessing/testDst/'
+# In[156]:
+
+
+srcDir='C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/in/'
+dstDir='C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/data/CNBC/processed/inFile/'
+
 
 while os.listdir(srcDir):
     all_files = glob.glob(srcDir + "/*.csv")
     
     for file in all_files:
-        os.chdir('/home/ubuntu/TextProcessing/in')
+        os.chdir('C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/in/')
         ## Reading the in directory files
         print ('currently processing file :',file )
         try:
@@ -741,7 +730,7 @@ while os.listdir(srcDir):
             print ('file_name:',file_name)
         
             ## writing the data to the output dir
-            os.chdir('/home/ubuntu/TextProcessing/outfile')
+            os.chdir('C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/outfile')
             with open(file_name, 'w') as outfile:
                 json.dump(result_json,outfile,ensure_ascii=False)      
         except:
@@ -751,5 +740,16 @@ while os.listdir(srcDir):
         print ('------------------------------------------------------')
 
 print ('-------------------  Completed and exiting the TextP -----------------------------------')
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
 
 
