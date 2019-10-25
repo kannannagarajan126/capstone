@@ -16,7 +16,7 @@ import json
 import soundex
 from difflib import SequenceMatcher
 import distance
-
+import string
 
 
 class TextProcessor():
@@ -59,11 +59,14 @@ class TextProcessor():
     
 
     def preprocess(self,words):       
-        #punctuations = (string.punctuation).replace("'", "") 
-        #punctuations=(string.punctuation).replace(".", "") 
-        #trans_table = str.maketrans('', '', punctuations)
-        #stripped_words = [word.translate(trans_table) for word in words]    
-        #words = [str for str in stripped_words if str]
+        punctuations = (string.punctuation).replace("'", "") 
+        punctuations=(string.punctuation).replace(".", "") 
+        trans_table = str.maketrans('', '', punctuations)
+        #trans_table=[ str.maketrans('', '', punctuations) for word in words]
+        stripped_words = [word.translate(trans_table) for word in words]    
+        words = [str for str in stripped_words if str]
+        words = [ word.encode('ascii', 'ignore')  for word in words ]
+        words = [ word.decode("utf-8") for word in words ]    
         p_words = []
         for word in words:
             if len(word)>0:
@@ -80,7 +83,7 @@ class TextProcessor():
         words = [word.lower() for word in words]
         words = [str.replace("\r","") for str in words if str]
         words = [str.replace("\\u","") for str in words if str]
-
+        
         words = [str.replace("â€œ","") for str in words if str]
         words = [str.replace("â€","") for str in words if str]
         words = [str.replace("â€˜","") for str in words if str]
