@@ -27,6 +27,8 @@ class SyncToMySQL():
             analyst_name = '';
             analyst_company = '';
 	    tv_chn_name ='';
+	    prefixStockName='';	    
+
 	    rec_cnt=0; 
             for detail in single_row['Details']:
 		tv_chn_name ='CNBC';
@@ -47,6 +49,9 @@ class SyncToMySQL():
                     recommadation = detail['extracted_text']
 		    rec_cnt=rec_cnt+1;
 
+                if(detail['field_Name']=='buyPrefix' or detail['field_Name']=='sellPrefix'):
+                    prefixStockName =detail['extracted_text']
+
                 if (detail['field_Name'] == 'stock_Name'):
                     stock_name = detail['extracted_text']
 		    rec_cnt=rec_cnt+1;
@@ -61,6 +66,10 @@ class SyncToMySQL():
 
             # print ('price ',price,' target ',target,' stop_loss',stop_loss,' recommadation',recommadation,' stock_name',stock_name,' analyst_name',analyst_name,' analyst_company',analyst_company)
 	    if rec_cnt=>6:
+
+                if prefixStockName!='':
+                    stock_name=prefixStockName+' '+stock_name
+
             	extract_dict = {
                 	'image_name': single_row['image_name'],
 	                'time': single_row['time'],
