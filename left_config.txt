@@ -1,0 +1,123 @@
+ 	{
+	"channel_name": "CNBC",
+ 	"number_fields": "5",
+ 	"fields_details": [
+ 		{
+ 			"field_Name": "target",
+ 			"Call_method": "blankInBetween",
+ 			"primary_config": {
+ 				"isPrimary": "Y",
+ 				"raw_field": ["target"],
+ 				"as_text": "Y",
+ 				"confirmation_field": "N",
+ 				"data_along": "Y",
+                "simliarity_threshold":.50
+ 			},
+ 			"secondary_config": {
+ 				"access_type": "",
+ 				"dependency_field_Name": "",
+ 				"how_many_section": ""
+ 			}
+ 		},
+ 		{
+ 			"field_Name": "price",
+ 			"Call_method": "blankInBetween",
+ 			"primary_config": {
+ 				"isPrimary": "Y",
+ 				"raw_field": ["price"],
+ 				"as_text": "Y",
+ 				"confirmation_field": "N",
+ 				"data_along": "Y",
+                "simliarity_threshold":.35
+ 			},
+ 			"secondary_config": {
+ 				"access_type": "",
+ 				"dependency_field_Name": "",
+ 				"how_many_section": ""
+ 			}
+ 		},     
+ 		{
+ 			"field_Name": "stop loss",
+ 			"Call_method": "blankInBetween",
+ 			"primary_config": {
+ 				"isPrimary": "Y",
+ 				"raw_field": ["stop loss"],
+ 				"as_text": "Y",
+ 				"confirmation_field": "N",
+ 				"data_along": "Y",
+                "simliarity_threshold":.80
+ 			},
+ 			"secondary_config": {
+ 				"access_type": "",
+ 				"dependency_field_Name": "",
+ 				"how_many_section": ""
+ 			}
+ 		},{
+ 			"field_Name": "buy",
+ 			"Call_method": "checkIfAvailable",
+ 			"primary_config": {
+ 				"isPrimary": "N",
+ 				"raw_field": "",
+ 				"as_text": "N",
+ 				"confirmation_field": "N",
+ 				"data_along": "N",
+                "simliarity_threshold":.40
+ 			},
+ 			"secondary_config": {
+ 				"access_type": "before",
+ 				"dependency_field_Name": "price",
+ 				"how_many_section": "1"
+ 			}
+ 		},
+ 		{
+ 			"field_Name": "sell",
+  			"Call_method": "checkIfAvailable",           
+ 			"primary_config": {
+ 				"isPrimary": "N",
+ 				"raw_field": "",
+ 				"as_text": "N",
+ 				"confirmation_field": "N",
+ 				"data_along": "N",
+                "simliarity_threshold":.40
+ 			},
+ 			"secondary_config": {
+ 				"access_type": "before",
+ 				"dependency_field_Name": "price",
+ 				"how_many_section": "1"
+ 			}
+ 		},{
+ 			"field_Name": "stock_Name",
+ 			"Call_method": "getFullrecord",
+ 			"primary_config": {
+ 				"isPrimary": "N",
+ 				"raw_field": "",
+ 				"as_text": "N",
+ 				"confirmation_field": "N",
+ 				"data_along": "N",
+                "simliarity_threshold":.99
+ 			},
+ 			"secondary_config": {
+ 				"access_type": "before",
+ 				"dependency_field_Name": "buy",
+ 				"how_many_section": "1"
+ 			}
+ 		},{
+ 			"field_Name": "stock_Name",
+ 			"Call_method": "getFullrecord",
+ 			"primary_config": {
+ 				"isPrimary": "N",
+ 				"raw_field": "",
+ 				"as_text": "N",
+ 				"confirmation_field": "N",
+ 				"data_along": "N",
+                "simliarity_threshold":.99
+ 			},
+ 			"secondary_config": {
+ 				"access_type": "before",
+ 				"dependency_field_Name": "sell",
+ 				"how_many_section": "1"
+ 			}
+ 		}
+ 	]
+
+ }

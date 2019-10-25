@@ -1,13 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[118]:
-
-
-#!/usr/bin/env python
-# coding: utf-8
-
-
 import os
 from os import listdir
 from os.path import isfile, join
@@ -22,10 +15,6 @@ import json
 import soundex
 from difflib import SequenceMatcher
 import distance
-
-
-# In[151]:
-
 
 class TextProcessor():
     def intializeLogger(self,logFilePath):
@@ -699,20 +688,15 @@ class TextProcessor():
         print ('Class is built')
 
 
-# In[152]:
-
 
 ##### Configration for CNBC channel
 
-os.chdir('C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/config')
+os.chdir('/home/ubuntu/TextProcessing/config/')
 left = open("left_config.txt", "r")
 left_config = eval(left.read())
 
 right = open("right_config.txt", "r")
 right_config=eval(right.read())
-
-
-# In[153]:
 
 
 import sys
@@ -726,23 +710,19 @@ import shutil, os, glob
 textP=TextProcessor()
 
 ## Creating the logger files 
-logging=textP.intializeLogger('C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/log/TextProcessing.log');
+logging=textP.intializeLogger('/home/ubuntu/TextProcessing/log/TextProcessing.log');
 logging.info('All set now !!!');
 logging.info('reading the data ');
 
 
-# In[156]:
-
-
-srcDir='C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/in/'
-dstDir='C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/data/CNBC/processed/inFile/'
-
+srcDir='/home/ubuntu/TextProcessing/tempTest/'
+dstDir='/home/ubuntu/TextProcessing/testDst/'
 
 while os.listdir(srcDir):
     all_files = glob.glob(srcDir + "/*.csv")
     
     for file in all_files:
-        os.chdir('C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/in/')
+        os.chdir('/home/ubuntu/TextProcessing/in')
         ## Reading the in directory files
         print ('currently processing file :',file )
         try:
@@ -761,7 +741,7 @@ while os.listdir(srcDir):
             print ('file_name:',file_name)
         
             ## writing the data to the output dir
-            os.chdir('C:/Users/kanna/Desktop/ISB_Work/CapsTone/Text_processing/outfile')
+            os.chdir('/home/ubuntu/TextProcessing/outfile')
             with open(file_name, 'w') as outfile:
                 json.dump(result_json,outfile,ensure_ascii=False)      
         except:
@@ -771,16 +751,5 @@ while os.listdir(srcDir):
         print ('------------------------------------------------------')
 
 print ('-------------------  Completed and exiting the TextP -----------------------------------')
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
 
 
