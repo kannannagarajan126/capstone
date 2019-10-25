@@ -707,27 +707,27 @@ while os.listdir(srcDir):
         os.chdir('/home/ubuntu/TextProcessing/in/')
         ## Reading the in directory files
         print ('currently processing file :',file )
-        try:
-            raw_text=textP.readData(logging,file);
-            dataFrame_formated=textP.preProcessData(logging,raw_text)
+        #try:
+        raw_text=textP.readData(logging,file);
+        dataFrame_formated=textP.preProcessData(logging,raw_text)
 
-            ## Filter out only valid data
-            filtered_formated=textP.filterOutRecords(logging,dataFrame_formated)
+        ## Filter out only valid data
+        filtered_formated=textP.filterOutRecords(logging,dataFrame_formated)
 
-            ## Extract information only from valid data
-            result_json=textP.extracInformation(logging,filtered_formated)
+        ## Extract information only from valid data
+        result_json=textP.extracInformation(logging,filtered_formated)
         
-            now = datetime.now()
-            current_time = now.strftime("%d_%m_%Y_%H_%M_%S")
-            file_name='CNBC_'+current_time+'_'+str(now.microsecond)+'.json'
-            print ('file_name:',file_name)
+        now = datetime.now()
+        current_time = now.strftime("%d_%m_%Y_%H_%M_%S")
+        file_name='CNBC_'+current_time+'_'+str(now.microsecond)+'.json'
+        print ('file_name:',file_name)
         
-            ## writing the data to the output dir
-            os.chdir('/home/ubuntu/TextProcessing/outfile/')
-            with open(file_name, 'w') as outfile:
-                json.dump(result_json,outfile,ensure_ascii=False)      
-        except:
-            print ('Error while processing !!')
+        ## writing the data to the output dir
+        os.chdir('/home/ubuntu/TextProcessing/outfile/')
+        with open(file_name, 'w') as outfile:
+           json.dump(result_json,outfile,ensure_ascii=False)      
+        #except:
+        #    print ('Error while processing !!')
         shutil.move(file, dstDir);
         print ('file moved :',file)
         print ('------------------------------------------------------')

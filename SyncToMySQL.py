@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-#!/usr/bin/env python
-# coding: utf-8
 
 import pandas as pd
 import sqlalchemy
@@ -108,25 +106,9 @@ class SyncToMySQL():
         
         engine = create_engine(URL(**db_url), encoding="utf8")
 	try:
-          mySQL_df.to_sql(con=engine, name='tv_data_extract', if_exists='append',index=False)
+          mySQL_df.to_sql(con=engine, name='tv_data_extract_1', if_exists='append',index=False)
 	except:
 	  print ('Error while processing')
-
-
-'''
-import json
-import os
-
-mysqlObj = SyncToMySQL();
-
-os.chdir('/home/ubuntu/TextProcessing/outfile');
-final_dict = open("extracted.json", "r");
-##final_dict=final_dict.encode('UTF-8');
-final_dict = eval(final_dict.read());
-mySQL_df = mysqlObj.processDataToSync(final_dict)
-mysqlObj.sinkDataToMySQL(mySQL_df)
-print('Completed!!!')
-'''
 
 
 
