@@ -11,8 +11,8 @@ import shutil, os, glob
 #inDir='/home/ubuntu/TextProcessing/in/'
 
 srcDir='/home/ubuntu/TextProcessing/tempTest'
-dstDir='/home/ubuntu/TextProcessing/testDst'
-inDir='/home/ubuntu/TextProcessing/'
+dstDir='/home/ubuntu/TextProcessing/data/CNBC/processed/rawFile'
+inDir='/home/ubuntu/TextProcessing/in/'
 
 
 
