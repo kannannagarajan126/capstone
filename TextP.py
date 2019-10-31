@@ -672,22 +672,17 @@ class TextProcessor():
 
 
 
-##### Configration for CNBC channel
-
-os.chdir('/home/ubuntu/TextProcessing/config')
-left = open("left_config.txt", "r")
-left_config = eval(left.read())
-
-right = open("right_config.txt", "r")
-right_config=eval(right.read())
-
+import time
+import json
+import os
+import pandas as pd
+from datetime import datetime
+import shutil, os, glob
 
 import sys
 import warnings
 import json
 warnings.simplefilter("ignore")
-from datetime import datetime
-import shutil, os, glob
 
 ## Creating object for the object 
 textP=TextProcessor()
@@ -697,44 +692,60 @@ logging=textP.intializeLogger('/home/ubuntu/TextProcessing/log/TextProcessing.lo
 logging.info('All set now !!!');
 logging.info('reading the data ');
 
-
-
-srcDir='/home/ubuntu/TextProcessing/in/'
-dstDir='/home/ubuntu/TextProcessing/data/CNBC/processed/inFile/'
-
-
-while os.listdir(srcDir):
-    all_files = glob.glob(srcDir + "/*.csv")
+while 1==1:
+    f=open("/home/ubuntu/TextProcessing/env/TextP_properties.txt","r")
+    props = eval (f.read())
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
+    if current_time>=props['end_time']:
+        print('End time reached !!')
+        break;
+    if (props['exection_mode'] == 'X'):
+        print ('Execution mode X is set so exiting ..')
+        break;
+    else:
+        ##### Configration for CNBC channel
+        os.chdir(props['config_file']);
+        left = open("left_config.txt", "r")
+        left_config = eval(left.read())
+        
+        right = open("right_config.txt", "r")
+        right_config=eval(right.read())
+        
+        srcDir=props['srcDir'];
+        dstDir=props['dstDir'];
+        while os.listdir(srcDir):
+            all_files = glob.glob(srcDir + "/*.csv")
     
-    for file in all_files:
-        os.chdir('/home/ubuntu/TextProcessing/in/')
-        ## Reading the in directory files
-        print ('currently processing file :',file )
-        #try:
-        raw_text=textP.readData(logging,file);
-        dataFrame_formated=textP.preProcessData(logging,raw_text)
+            for file in all_files:
+                
+                os.chdir(props['srcDir']);
+                ## Reading the in directory files
+                print ('currently processing file :',file )
+                try:
+                    raw_text=textP.readData(logging,file);
+                    dataFrame_formated=textP.preProcessData(logging,raw_text)
+                    
+                    ## Filter out only valid data
+                    filtered_formated=textP.filterOutRecords(logging,dataFrame_formated)
 
-        ## Filter out only valid data
-        filtered_formated=textP.filterOutRecords(logging,dataFrame_formated)
-
-        ## Extract information only from valid data
-        result_json=textP.extracInformation(logging,filtered_formated)
+                    ## Extract information only from valid data
+                    result_json=textP.extracInformation(logging,filtered_formated)
         
-        now = datetime.now()
-        current_time = now.strftime("%d_%m_%Y_%H_%M_%S")
-        file_name='CNBC_'+current_time+'_'+str(now.microsecond)+'.json'
-        print ('file_name:',file_name)
+                    now = datetime.now()
+                    current_time = now.strftime("%d_%m_%Y_%H_%M_%S")
+                    file_name='CNBC_'+current_time+'_'+str(now.microsecond)+'.json'
+                    print ('file_name:',file_name)
         
-        ## writing the data to the output dir
-        os.chdir('/home/ubuntu/TextProcessing/outfile/')
-        with open(file_name, 'w') as outfile:
-           json.dump(result_json,outfile,ensure_ascii=False)      
-        #except:
-        #    print ('Error while processing !!')
-        shutil.move(file, dstDir);
-        print ('file moved :',file)
-        print ('------------------------------------------------------')
-
-print ('-------------------  Completed and exiting the TextP -----------------------------------')
-
-
+                    ## writing the data to the output dir
+                    os.chdir(props['outFile']);
+                    with open(file_name, 'w') as outfile:
+                        json.dump(result_json,outfile,ensure_ascii=False)      
+                except:
+                    print ('Error while processing !!')
+                shutil.move(file, dstDir);
+                print ('file moved :',file)
+                print ('------------------------------------------------------')
+        print ('No more files to process')
+        time.sleep(int(props['sleep_sec']))
+        continue;

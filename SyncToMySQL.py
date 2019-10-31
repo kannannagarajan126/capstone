@@ -6,10 +6,6 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 
-from pymysql import cursors, connect
-from mysql import connector
-
-
 class SyncToMySQL():
     def processDataToSync(self, final_dict):
         columns_list = ['image_name', 'time', 'price', 'target', 'stop_loss', 'recommadation', 'stock_name',
@@ -66,15 +62,15 @@ class SyncToMySQL():
                     stock_name = prefixStockName+' '+stock_name
 
                 extract_dict = {
-                	'image_name': single_row['image_name'],
-	                'time': single_row['time'],
-                	'price': price,
-                	'target': target,
-                	'stop_loss': stop_loss,
-                	'recommadation': recommadation,
-                	'stock_name': stock_name,
-                	'analyst_name': analyst_name,
-                	'analyst_company': analyst_company, 'tv_chn_name': tv_chn_name
+                    'image_name': single_row['image_name'],
+                    'time': single_row['time'],
+                    'price': price,
+                    'target': target,
+                    'stop_loss': stop_loss,
+                    'recommadation': recommadation,
+                    'stock_name': stock_name,
+                    'analyst_name': analyst_name,
+                    'analyst_company': analyst_company, 'tv_chn_name': tv_chn_name
                 }
 
                 temp_extract_df = pd.DataFrame([extract_dict])
@@ -109,28 +105,45 @@ class SyncToMySQL():
           print ('Error while processing')
 
 
+
+import time
 import json
 import os
 import pandas as pd
 from datetime import datetime
-import shutil
-import os
-import glob
+import shutil, os, glob
+while 1==1:
+    f=open("/home/ubuntu/TextProcessing/env/SyncToMySQL_properties.txt","r")
+    props = eval (f.read())
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
+    if current_time>=props['end_time']:
+        print('End time reached !!')
+        break;
+    if (props['exection_mode'] == 'X'):
+        print ('Exiting..')
+        break;
+    else:
+        mysqlObj = SyncToMySQL();
+        srcDir = props['srcDir']
+        dstDir = props['dstDir']
+        while os.listdir(srcDir):
+            all_files = glob.glob(srcDir + "/*.json")
+            for file in all_files:
+                print ('processing :', file)
+                final_dict = open(file, "r");
+                final_dict = eval(final_dict.read());
+                mySQL_df = mysqlObj.processDataToSync(final_dict)
+                if mySQL_df.empty == False:
+                    print ('Inserting into MqSQL ')
+                    mysqlObj.sinkDataToMySQL(mySQL_df);
+                    print ('Move files to destination dir')
+                shutil.move(file, dstDir);
+        print ('No more files to process !!')
+        
+        time.sleep(int(props['sleep_sec']))
+        continue;
 
-mysqlObj = SyncToMySQL();
 
-srcDir = '/home/ubuntu/TextProcessing/outfile'
-dstDir = '/home/ubuntu/TextProcessing/data/CNBC/processed/process_json'
-while os.listdir(srcDir):
-    all_files = glob.glob(srcDir + "/*.json")
-    for file in all_files:
-        print ('processing :', file)
-        final_dict = open(file, "r");
-        final_dict = eval(final_dict.read());
-        mySQL_df = mysqlObj.processDataToSync(final_dict)
-        if mySQL_df.empty == False:
-            print ('Inserting into MqSQL ')
-            mysqlObj.sinkDataToMySQL(mySQL_df);
-            print ('Move files to destination dir')
-        shutil.move(file, dstDir);
-print ('Completed!!!')
+
+
