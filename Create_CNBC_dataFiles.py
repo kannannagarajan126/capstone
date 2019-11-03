@@ -12,6 +12,7 @@ def processRawDataFile(props):
     srcDir=props['srcDir']
     dstDir=props['dstDir']
     inDir=props['inDir']
+    badFiles=props['badFiles']
     
     while os.listdir(srcDir):
         all_files = glob.glob(srcDir + "/*.csv")
@@ -26,7 +27,7 @@ def processRawDataFile(props):
             df = pd.read_csv(filename, index_col=None, header=0)
             li.append(df)
             cnt=cnt+1
-            if cnt>=100:
+            if cnt>=1:
                 break;
     
         if fileExist==True :
@@ -46,7 +47,16 @@ def processRawDataFile(props):
 
             #Move files from source directory to incomming directory
             for fileName in current_files:
-                shutil.move(fileName, dstDir);
+		print ('*'*10)
+                try:
+                  print ('source file : ',srcDir,'/',fileName)
+                  print ('dstDir file : ',dstDir,'/',fileName)
+                  #shutil.move(os.path.join(srcDir, fileName),os.path.join(dstDir, fileName))
+                  shutil.move(fileName, dstDir);
+                except:
+                  print ('Exception occred while moving file so moving to badFile dir')
+                  shutil.move(fileName, badFiles);
+                print ('*'*10)
             print ('Completed')
         else:
             print ('No files to process !!')

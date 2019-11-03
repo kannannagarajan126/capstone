@@ -161,12 +161,16 @@ class TextProcessor():
             side=''
             
             if (str(row['Text']).strip() != "" and str(row['Text'])!='nan'):
-                words=self.remove_metadata(row['Text'])
+                append_word=" | ";
+                words=row['Text']+append_word
+                words=self.remove_metadata(words)
                 words=self.tokenize_sentence(words)
                 #logging.info('formated text : ',words)
                 
-            if (str(row['SN_L-SD_R']).strip() != "" and str(row['SN_L-SD_R'])!='nan'):   
-                words1=self.remove_metadata(row['SN_L-SD_R'])
+            if (str(row['SN_L-SD_R']).strip() != "" and str(row['SN_L-SD_R'])!='nan'):
+                append_word=" | ";
+                words1=row['SN_L-SD_R']+append_word
+                words1=self.remove_metadata(words1)
                 words1=self.tokenize_sentence(words1)
                 #logging.info('SN_L-SD_R text',words1)    
         
