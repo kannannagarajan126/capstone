@@ -23,7 +23,7 @@ class SyncToMySQL():
             analyst_company = '';
             tv_chn_name = '';
             prefixStockName = ''; rec_cnt = 0;
-
+            side=single_row['image_side'];
             for detail in single_row['Details']:
                 tv_chn_name = 'CNBC';
 
@@ -57,7 +57,7 @@ class SyncToMySQL():
                 if (detail['field_Name'] == 'broker_firm'):
                     analyst_company = detail['extracted_text']
                     rec_cnt = rec_cnt+1;
-            if rec_cnt >= 6:
+            if (rec_cnt >= 6 and side=='Right') or (rec_cnt >= 5 and side=='Left' ):
                 if prefixStockName != '':
                     stock_name = prefixStockName+' '+stock_name
 
