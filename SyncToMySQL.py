@@ -11,7 +11,7 @@ class SyncToMySQL():
         columns_list = ['image_name', 'time', 'price', 'target', 'stop_loss', 'recommadation', 'stock_name',
                         'analyst_name', 'analyst_company', 'tv_chn_name']
         mySQL_df = pd.DataFrame(columns=columns_list)
-
+        side=''
         for single_row in final_dict['extracted_data']:
             # print (single_row)
             price = '';
@@ -23,7 +23,6 @@ class SyncToMySQL():
             analyst_company = '';
             tv_chn_name = '';
             prefixStockName = ''; rec_cnt = 0;
-            side=single_row['image_side'];
             for detail in single_row['Details']:
                 tv_chn_name = 'CNBC';
 
@@ -57,7 +56,11 @@ class SyncToMySQL():
                 if (detail['field_Name'] == 'broker_firm'):
                     analyst_company = detail['extracted_text']
                     rec_cnt = rec_cnt+1;
-            if (rec_cnt >= 6 and side=='Right') or (rec_cnt >= 5 and side=='Left' ):
+                
+                if rec_cnt>=4:
+                    side=single_row['image_side'];
+
+            if (rec_cnt >= 6 and side=='Right') or (rec_cnt >= 4 and side=='Left' ):
                 if prefixStockName != '':
                     stock_name = prefixStockName+' '+stock_name
 
@@ -78,16 +81,6 @@ class SyncToMySQL():
 
         return mySQL_df;
 
-    def sinkDataToMqSQL1(self, mySQL_df):
-        database_username = 'streetalpha'
-        database_password = 'KentuckyMeeting8|'
-        database_ip = '13.235.233.13'
-        database_name = 'streetalpha'
-        database_connection = sqlalchemy.create_engine('mysql+mysqlconnector://{0}:{1}@{2}/{3}?charset=utf8'.format(
-            database_username, database_password, database_ip, database_name))
-        mySQL_df.to_sql(con=database_connection,
-                        name='tv_data_extract', if_exists='append')
-
     def sinkDataToMySQL(self, mySQL_df):
         db_url = {
             'database': "streetalpha",
@@ -100,10 +93,9 @@ class SyncToMySQL():
 
         engine = create_engine(URL(**db_url), encoding="utf8")
         try:
-          mySQL_df.to_sql(con=engine, name='tv_data_extract_1',if_exists='append', index=False)
+           mySQL_df.to_sql(con=engine, name='tv_data_extract_1',if_exists='append', index=False)
         except:
-          print ('Error while processing')
-
+           print ('Error while processing')
 
 
 import time
@@ -118,10 +110,10 @@ while 1==1:
     now = datetime.now()
     current_time = now.strftime("%H:%M")
     if current_time>=props['end_time']:
-        print('End time reached !!')
+        print(current_time,':','End time reached !!')
         break;
     if (props['exection_mode'] == 'X'):
-        print ('Exiting..')
+        print(current_time,':','Exiting..')
         break;
     else:
         mysqlObj = SyncToMySQL();
@@ -130,20 +122,18 @@ while 1==1:
         while os.listdir(srcDir):
             all_files = glob.glob(srcDir + "/*.json")
             for file in all_files:
-                print ('processing :', file)
+                print(current_time,':','processing :', file)
                 final_dict = open(file, "r");
                 final_dict = eval(final_dict.read());
                 mySQL_df = mysqlObj.processDataToSync(final_dict)
                 if mySQL_df.empty == False:
-                    print ('Inserting into MqSQL ')
+                    print(current_time,':','Inserting into MqSQL ')
                     mysqlObj.sinkDataToMySQL(mySQL_df);
-                    print ('Move files to destination dir')
+                    print(current_time,':','Move files to destination dir')
                 shutil.move(file, dstDir);
-        print ('No more files to process !!')
+        print(current_time,':','No more files to process !!')
         
         time.sleep(int(props['sleep_sec']))
         continue;
-
-
 
 
