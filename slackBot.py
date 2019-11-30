@@ -11,7 +11,7 @@ os.chdir('/home/ubuntu/TextProcessing/data');
 file1 = open("status.txt","r+")  
 text =file1.read()
 
-webhook_url = 'https://hooks.slack.com/services/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'
+webhook_url = 'https://hooks.slack.com/services/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'
 slack_data = {'text': text }
 
 response = requests.post(

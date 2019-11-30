@@ -31,8 +31,7 @@ class SyncToMySQL():
         else:
             return lst.index(max(lst))
     
-    def get_ticker_cosine_sim(self,stock_name):
-        df_tickers = pd.read_csv("/home/ubuntu/TextProcessing/config/tickers.csv", header = 0)
+    def get_ticker_cosine_sim(self,stock_name,df_tickers):
         df_tickers['NAME OF COMPANY']=df_tickers['NAME OF COMPANY'].str.lower()
         tic = ""
         # filter records based on words in stock name
@@ -44,6 +43,7 @@ class SyncToMySQL():
         if filtered_df.empty:
             return tic
         names = filtered_df['NAME OF COMPANY']
+        #print(filtered_df)
         #print(names.values)
         company_name = []
         cos_sim = []
@@ -75,7 +75,8 @@ class SyncToMySQL():
             maxpos = 0
             if type(max_substr_indices) is list:
                 #print('list')
-                maxpos = max_substr_indices[0]
+                #maxpos = max_substr_indices[0]
+                return ""
             else:
                 maxpos = max_substr_indices
             #print('maxpos')
@@ -88,12 +89,31 @@ class SyncToMySQL():
             c_name = company_name[max_indices]
             tic = filtered_df[filtered_df['NAME OF COMPANY'] == c_name]['SYMBOL'].values
             #print(tic)
-    
-        if len(tic) != 0:
-            return tic[0]
+ 
+        return tic
+
+    # 1. check if symbol directly matches the stock name
+    # 2. check if channel Alias is available
+    # 3. check if we reomve spaces and collapse the stock name if that matches
+    # 4. filter based on words and find best match
+    def get_ticker(self,stock_name):
+        stock_name = stock_name.lower()
+        df_tickers = pd.read_csv("/home/ubuntu/TextProcessing/config/tickers.csv", header = 0)
+        ticker = df_tickers[df_tickers['SYMBOL'] == stock_name.upper()]['SYMBOL'].values
+        if len(ticker) == 0:
+            ticker = df_tickers[df_tickers['Alias1'] == stock_name]['SYMBOL'].values
+        if len(ticker) == 0:
+            compact_name = stock_name.replace(" ", "").upper()
+            ticker = df_tickers[df_tickers['SYMBOL'] == compact_name]['SYMBOL'].values
+        if len(ticker) == 0:
+            # use cosine similarity
+            ticker = self.get_ticker_cosine_sim(stock_name,df_tickers)
+        #print(ticker)
+        if len(ticker) != 0:
+            return ticker[0]
         else:
             return ""
-    
+        
     def processDataToSync(self, final_dict):
         columns_list = ['image_name', 'time', 'price', 'target', 'stop_loss', 'recommadation', 'stock_name',
                         'analyst_name', 'analyst_company', 'tv_chn_name','NSE_ticker']
@@ -139,10 +159,11 @@ class SyncToMySQL():
                     print ('Stock Name :',stock_name)
                     try:
                         if (stock_name != None or stock_name != ''):
-                            ticket_name=self.get_ticker_cosine_sim(stock_name);
+                            ticket_name=self.get_ticker(stock_name);
                             print ('Ticker retrived :',ticket_name)
                     except:
                         print ('Error occured while selecting the ticker value');
+                        continue;
                         
                 if (detail['field_Name'] == 'broker_Name'):
                     analyst_name = detail['extracted_text'];
@@ -155,7 +176,7 @@ class SyncToMySQL():
                 if rec_cnt>=4:
                     side=single_row['image_side'];
 
-            if (rec_cnt >= 6 and side=='Right') or (rec_cnt >= 4 and side=='Left' ):
+            if (rec_cnt >= 4 and side=='Right') or (rec_cnt >= 4 and side=='Left' ):
                 if prefixStockName != '':
                     stock_name = prefixStockName+' '+stock_name;
 
